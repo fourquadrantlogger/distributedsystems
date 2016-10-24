@@ -27,3 +27,61 @@
 第一步, 将服务的key按该hash算法计算,得到在服务在一致性hash环上的位置.
 第二步, 将缓存的key，用同样的方法计算出hash环上的位置，按顺时针方向，找到第一个大于等于该hash环位置的服务key，从而得到该key需要分配的服务器。
 ![](/img/一致性hash.jpg)
+
+```
+//C为client客户端，S为service服务器
+public class ConsistentHash<c,s> {
+    //虚拟节点的个数，默认200
+    private int virtualNum;
+    private long unit;//移动
+    //存储服务器的容器
+    private TreeMap<integer,s> map = new TreeMap<>();
+    public ConsistentHash() {
+        this(200);
+    }
+    public ConsistentHash(int virtualNum) {
+        this.virtualNum = virtualNum;
+        unit = ((long)(Integer.MAX_VALUE/virtualNum)<<1)-2;
+    }
+    //添加服务器结点
+    public void add(S s){
+        int hash = hash(s);
+        //保证分散到Integer的范围内
+        for (int i = 0; i < virtualNum; i++) 
+            map.put((int)(hash+i*unit), s);
+    }
+    //删除服务器结点
+    public void remove(S s){
+        int hash = hash(s);
+        //保证分散到Integer的范围内,先转换为int再转换为Integer
+        for (int i = 0; i < virtualNum; i++) 
+            map.remove((Integer)(int)(hash+i*unit));
+    }
+    //获取服务器
+    public S get(C c){
+        if(map.isEmpty())
+            return null;
+        int hash = hash(c);
+        //TreeMap独有的取上和取下方法
+        //ceiling 和 floor (Math中是ceil)
+        Entry<integer,s> entry = map.ceilingEntry(hash);
+        if(entry == null) //空就代表需要回环了
+            return map.firstEntry().getValue();
+        else
+            return entry.getValue();
+    }
+    //再次分散的hash方法
+    private int hash(Object o) {
+        if(o == null)
+            return 0;
+        int h = 0;
+        h ^= o.hashCode();
+        h ^= (h >>> 20) ^ (h >>> 12);
+        return h ^ (h >>> 7) ^ (h >>> 4);
+    }
+}
+
+```
+
+首先求出服务器的哈希值， 并将其配置到0～2^32的圆上。 然后用同样的方法求出客户端的哈希值，并映射到圆上。 然后从数据映射到的位置开始顺时针查找，第一个服务器服务它。 如果超过2^32找不到服务器，就会保存到第一台服务器上。
+使用虚拟节点的思想，为每个服务器在圆上分配100～200个点。这样就能抑制分布不均匀， 最大限度地减小服务器增减时的缓存重新分布。
