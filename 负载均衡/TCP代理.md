@@ -1,0 +1,3 @@
+# HAProxy
+
+能够补充Nginx的一些缺点比如Session的保持，Cookie的引导等工作，支持url检测后端的服务器出问题的检测会有很好的帮助。
