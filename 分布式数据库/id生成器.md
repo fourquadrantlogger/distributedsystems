@@ -102,6 +102,7 @@ Id 首先要保证的是全局唯一，可以不必保证精确的顺序性，�
 Id 的长度也是一个非常重要的指标，如果在并发量比较大的情况下，可以计算一下，传输的数据量非常可观。
 
 附 SnowFlake java 实现代码（来自网络） ：
+````
 
 public class SnowFlakeIdWorker {
 
@@ -216,3 +217,4 @@ return System. currentTimeMillis ();
 }
 
 }
+```
